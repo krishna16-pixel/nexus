@@ -1,20 +1,15 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "public",
-  "framework": "express",
-  "functions": {
-    "api/index.js": {
-      "runtime": "nodejs18.x"
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python"
     }
-  },
-  "rewrites": [
+  ],
+  "routes": [
     {
-      "source": "/api/:path*",
-      "destination": "/api"
-    },
-    {
-      "source": "/((?!api/).*)",
-      "destination": "/index.html"
+      "src": "/(.*)",
+      "dest": "api/index.py"
     }
   ]
 }
