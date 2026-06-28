@@ -24,7 +24,7 @@ if not GROQ_API_KEY or not TAVILY_API_KEY:
     raise ValueError("Missing API Keys. Please set GROQ_API_KEY and TAVILY_API_KEY environment variables.")
 
 # FastAPI Setup
-app.add_middleware(
+api.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://nexus-hlvwpvr9s-krishnadev2.vercel.app/"
