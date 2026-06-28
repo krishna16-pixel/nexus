@@ -169,7 +169,7 @@ app.get('/api/health', (req, res) => {
 // ==================== SERVE FRONTEND ====================
 // Catch-all for frontend routing
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
+  res.sendFile(path.join(__dirname, "e.html"));
 });
 
 // ==================== START SERVER ====================
