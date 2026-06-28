@@ -48,8 +48,8 @@ class ResearchRequest(BaseModel):
     custom_instructions: Optional[str] = None
 
 # Initialize Models and Tools
-fast = ChatGroq(model="llama3-70b-8192", temperature=0.1, api_key=GROQ_API_KEY)
-reasoning = ChatGroq(model="llama3-70b-8192", temperature=0.2, api_key=GROQ_API_KEY)
+fast = ChatGroq(model="llama-3.1-8b-instant", temperature=0.1, api_key=GROQ_API_KEY)
+reasoning = ChatGroq(model="openai/gpt-oss-20b", temperature=0.2, api_key=GROQ_API_KEY)
 search_tool = TavilySearchResults(max_results=5, tavily_api_key=TAVILY_API_KEY)
 
 def extract_domain(url: str) -> str:
