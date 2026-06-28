@@ -173,7 +173,7 @@ async def perform_research(request: ResearchRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/")
+@api.get("/")
 async def root():
     return {"status": "ok"}
 
