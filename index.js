@@ -29,20 +29,32 @@ app.post('/api/chat/new', (req, res) => {
 });
 
 // 2. SEND MESSAGE - Handle chat messages
-const response = await fetch("https://nexus-bjg6.onrender.com/research", {
-    method: "POST",
-    headers: {
-        "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
+async function sendMessage(message) {
+  try {
+    const response = await fetch("https://nexus-bjg6.onrender.com/research", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
         topic: message,
         target_url: "",
-        custom_instructions: ""
-    })
-});
+        custom_instructions: "",
+      }),
+    });
 
-const data = await response.json();
-console.log(data.report_html);
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.detail || "Request failed");
+    }
+
+    return data.report_html;
+  } catch (error) {
+    console.error("Error:", error);
+    return `<p style="color:red;">${error.message}</p>`;
+  }
+}
 // 3. GET CHAT HISTORY
 app.get('/api/chat/history', (req, res) => {
   try {
