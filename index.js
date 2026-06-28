@@ -31,33 +31,16 @@ app.post('/api/chat/new', (req, res) => {
 // 2. SEND MESSAGE - Handle chat messages
 app.post('/api/chat/message', async (req, res) => {
   try {
-    console.log("Incoming request:", req.body);
+    const { message } = req.body;
 
-    const response = await fetch(
-      'https://nexus-bjg6.onrender.com/api/chat/message',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(req.body)
-      }
-    );
-
-    const text = await response.text();
-
-    console.log("Status:", response.status);
-    console.log("Response:", text);
-
-    res.status(response.status).send(text);
+    // Replace this with your AI logic
+    res.json({
+      success: true,
+      reply: `You said: ${message}`
+    });
 
   } catch (err) {
-    console.error(err);
-
-    res.status(500).json({
-      success: false,
-      error: err.message
-    });
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 // 3. GET CHAT HISTORY
