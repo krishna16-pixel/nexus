@@ -24,14 +24,15 @@ if not GROQ_API_KEY or not TAVILY_API_KEY:
     raise ValueError("Missing API Keys. Please set GROQ_API_KEY and TAVILY_API_KEY environment variables.")
 
 # FastAPI Setup
-api = FastAPI(title="Academic Research API")
-api.add_middleware(
+app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Adjust for production
+    allow_origins=[
+        "https://nexus-hlvwpvr9s-krishnadev2.vercel.app/"
+    ],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 class AgentState(BaseModel):
     question: str
     target_url: Optional[str] = None
