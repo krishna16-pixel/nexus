@@ -1,21 +1,13 @@
 {
   "name": "nexus-ai",
   "version": "1.0.0",
-  "description": "Nexus AI - Advanced Chat Interface",
-  "main": "api/index.js",
   "type": "module",
+  "main": "index.js",
   "scripts": {
-    "dev": "node api/index.js",
-    "build": "echo 'Build complete'",
-    "start": "node api/index.js"
+    "start": "node index.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
     "cors": "^2.8.5",
-    "dotenv": "^16.3.1"
-  },
-  "devDependencies": {},
-  "engines": {
-    "node": "24.x"
+    "express": "^4.19.2"
   }
 }
