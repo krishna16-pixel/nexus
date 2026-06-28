@@ -157,7 +157,7 @@ workflow.add_edge("continue_research", "search_engine")
 workflow.add_edge("finalizer", END)
 graph_app = workflow.compile()
 
-@app.post("/research")
+@api.post("/research")
 async def perform_research(request: ResearchRequest):
     try:
         final_state = graph_app.invoke({
