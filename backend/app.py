@@ -24,8 +24,8 @@ if not GROQ_API_KEY or not TAVILY_API_KEY:
     raise ValueError("Missing API Keys. Please set GROQ_API_KEY and TAVILY_API_KEY environment variables.")
 
 # FastAPI Setup
-app = FastAPI(title="Academic Research API")
-app.add_middleware(
+api = FastAPI(title="Academic Research API")
+api.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Adjust for production
     allow_methods=["*"],
@@ -175,4 +175,4 @@ async def perform_research(request: ResearchRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(api, host="0.0.0.0", port=8000)
