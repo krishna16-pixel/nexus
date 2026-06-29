@@ -33,7 +33,8 @@ app.post("/api/chat/send", async (req, res) => {
   try {
     const { message } = req.body;
 
-    const response = await fetch("https://nexus-bjg6.onrender.com/", {
+    const response = await fetch("https://nexus-bjg6.onrender.com/research"
+                                 , {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
