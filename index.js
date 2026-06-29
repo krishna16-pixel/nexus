@@ -1,115 +1,229 @@
-// Create a new file: src/config/api.js (or wherever your API calls are)
+import express from 'express';
+import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-// Production URL
-const API_BASE_URL = 'https://nexus-bjg6.onrender.com/research';
+const app = express();
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-export const apiClient = {
-  // Send message to chat
-  sendMessage: async (message) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/chat/send`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ message }),
-      });
+// ==================== CORS CONFIGURATION ====================
+const corsOptions = {
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+      'https://nexus-5wf8crw95-krishnadev2.vercel.app'
+    ];
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to send message');
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error sending message:', error);
-      throw error;
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
     }
   },
-
-  // Create new chat
-  createNewChat: async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/chat/new`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) throw new Error('Failed to create chat');
-      return await response.json();
-    } catch (error) {
-      console.error('Error creating chat:', error);
-      throw error;
-    }
-  },
-
-  // Get chat history
-  getChatHistory: async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/chat/history`);
-      if (!response.ok) throw new Error('Failed to get history');
-      return await response.json();
-    } catch (error) {
-      console.error('Error getting history:', error);
-      throw error;
-    }
-  },
-
-  // Get connectors
-  getConnectors: async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/connectors`);
-      if (!response.ok) throw new Error('Failed to get connectors');
-      return await response.json();
-    } catch (error) {
-      console.error('Error getting connectors:', error);
-      throw error;
-    }
-  },
-
-  // Connect a service
-  connectService: async (connectorId, credentials) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/connectors/connect`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ connectorId, credentials }),
-      });
-
-      if (!response.ok) throw new Error('Failed to connect service');
-      return await response.json();
-    } catch (error) {
-      console.error('Error connecting service:', error);
-      throw error;
-    }
-  },
-
-  // Get plugins
-  getPlugins: async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/plugins`);
-      if (!response.ok) throw new Error('Failed to get plugins');
-      return await response.json();
-    } catch (error) {
-      console.error('Error getting plugins:', error);
-      throw error;
-    }
-  },
-
-  // Health check
-  healthCheck: async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/health`);
-      return await response.json();
-    } catch (error) {
-      console.error('Backend is not available:', error);
-      return { status: 'offline' };
-    }
-  }
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 200
 };
 
-export default apiClient;
+// ==================== MIDDLEWARE ====================
+app.use(cors(corsOptions));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(express.static(path.join(__dirname, '../public')));
+
+// ==================== API ROUTES ====================
+
+// 1. NEW CHAT - Create new chat session
+app.post('/api/chat/new', (req, res) => {
+  try {
+    const chatId = `chat_${Date.now()}`;
+    res.json({
+      success: true,
+      chatId: chatId,
+      message: 'New chat created',
+      createdAt: new Date()
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 2. SEND MESSAGE - Handle chat messages
+app.post("/api/chat/send", async (req, res) => {
+  try {
+    const { message } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Message is required' 
+      });
+    }
+
+    const response = await fetch("https://nexus-bjg6.onrender.com/research", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        topic: message,
+        target_url: "",
+        custom_instructions: "",
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return res.status(response.status).json(data);
+    }
+
+    res.json({
+      success: true,
+      reply: data.report_html,
+    });
+  } catch (error) {
+    console.error('Error in /api/chat/send:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+// 3. GET CHAT HISTORY
+app.get('/api/chat/history', (req, res) => {
+  try {
+    res.json({
+      success: true,
+      history: []
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 4. CONNECTORS - Get available connectors
+app.get('/api/connectors', (req, res) => {
+  try {
+    res.json({
+      success: true,
+      connectors: [
+        { id: 1, name: 'GitHub', icon: 'github', connected: false },
+        { id: 2, name: 'Jira', icon: 'jira', connected: false },
+        { id: 3, name: 'Slack', icon: 'slack', connected: false },
+        { id: 4, name: 'Gmail', icon: 'gmail', connected: false }
+      ]
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 5. CONNECT - Connect a service
+app.post('/api/connectors/connect', (req, res) => {
+  try {
+    const { connectorId, credentials } = req.body;
+    
+    res.json({
+      success: true,
+      message: 'Connector connected successfully',
+      connectorId: connectorId
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 6. CUSTOM PLUGINS - Save custom plugin
+app.post('/api/plugins/custom', (req, res) => {
+  try {
+    const { toolName, endpoint } = req.body;
+
+    if (!toolName || !endpoint) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Tool name and endpoint URL are required' 
+      });
+    }
+
+    const pluginId = `plugin_${Date.now()}`;
+    res.json({
+      success: true,
+      pluginId: pluginId,
+      toolName: toolName,
+      endpoint: endpoint,
+      createdAt: new Date()
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 7. GET PLUGINS
+app.get('/api/plugins', (req, res) => {
+  try {
+    res.json({
+      success: true,
+      plugins: []
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 8. INSTRUCTIONS PAGE DATA
+app.get('/api/instructions', (req, res) => {
+  try {
+    res.json({
+      success: true,
+      title: 'How to Use Nexus AI',
+      content: 'Add your instructions content here'
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 9. PRIVACY POLICY DATA
+app.get('/api/privacy', (req, res) => {
+  try {
+    res.json({
+      success: true,
+      title: 'Privacy Policy',
+      content: 'Add your privacy policy content here'
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 10. Health Check
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'Backend is running!' });
+});
+
+// ==================== SERVE FRONTEND ====================
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/index.html")).catch(() => {
+    res.status(404).json({ error: 'Not found' });
+  });
+});
+
+// ==================== START SERVER ====================
+const PORT = process.env.PORT || 3000;
+
+const server = app.listen(PORT, () => {
+  console.log(`✓ Nexus AI Backend running on port ${PORT}`);
+  console.log(`✓ CORS enabled for: https://nexus-5wf8crw95-krishnadev2.vercel.app`);
+  console.log(`✓ Server ready to accept requests`);
+});
+
+server.on('error', (err) => {
+  console.error('❌ Server error:', err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+});
