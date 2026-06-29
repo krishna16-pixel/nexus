@@ -30,7 +30,7 @@ api = FastAPI()
 api.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://nexus-hlvwpvr9s-krishnadev2.vercel.app/"
+        "https://nexus-coral-rho.vercel.app//"
     ],
     allow_credentials=True,
     allow_methods=["*"],
