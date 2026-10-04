@@ -62,6 +62,13 @@ export function Notifications() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unreadOnly]);
 
+  // Refresh the list whenever the layout reports new or changed notifications.
+  useEffect(() => {
+    const onChange = () => load(page, unreadOnly);
+    window.addEventListener("notifications-changed", onChange);
+    return () => window.removeEventListener("notifications-changed", onChange);
+  }, [page, unreadOnly]);
+
   const markRead = async (id: string) => {
     await circleApi.markNotificationRead(id);
     load(page, unreadOnly);

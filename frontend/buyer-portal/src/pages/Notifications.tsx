@@ -40,8 +40,24 @@ const KIND_ICON: Record<string, string> = {
   order_cancelled_by_buyer: "❌",
 };
 
+// Notification kinds that are sent to the renter (buyer) of a rented book.
+const RENTER_KINDS = new Set([
+  "rent_accepted",
+  "rental_due_soon",
+  "rental_due_warning",
+  "rental_due_1_day",
+  "rental_due_1_hour",
+  "rental_due",
+  "rental_overdue",
+  "rental_collection_notice",
+  "rental_overdue_fined",
+  "rental_return_cancelled",
+  "rental_period_completed",
+]);
+
 export function Notifications() {
   const [items, setItems] = useState<NotificationItem[]>([]);
+  const [notice, setNotice] = useState("");
   const [meta, setMeta] = useState<PaginationMeta | null>(null);
   const [page, setPage] = useState(1);
   const [unreadOnly, setUnreadOnly] = useState(false);
@@ -62,6 +78,27 @@ export function Notifications() {
     load(1, unreadOnly);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unreadOnly]);
+
+  // Refresh the list whenever the layout reports new or changed notifications.
+  useEffect(() => {
+    const onChange = () => load(page, unreadOnly);
+    window.addEventListener("notifications-changed", onChange);
+    return () => window.removeEventListener("notifications-changed", onChange);
+  }, [page, unreadOnly]);
+
+  const returnBook = async (n: NotificationItem) => {
+    if (!n.ref_id) return;
+    if (!window.confirm("Request return of this rented book? The owner will be asked to confirm receipt.")) return;
+    setError("");
+    setNotice("");
+    try {
+      await circleApi.requestReturn(n.ref_id);
+      setNotice("Return requested. The owner has been notified.");
+      load(page, unreadOnly);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Return request failed");
+    }
+  };
 
   const markRead = async (id: string) => {
     await circleApi.markNotificationRead(id);
@@ -86,6 +123,7 @@ export function Notifications() {
       <PageHeader title="Notifications" subtitle="Rent requests, due reminders, returns and more" />
       <div className="page-body">
         {error && <div className="alert alert-error">{error}</div>}
+        {notice && <div className="alert alert-success">{notice}</div>}
         <div className="page-actions" style={{ marginBottom: "1rem" }}>
           <button type="button" className={unreadOnly ? "btn btn-primary btn-sm" : "btn btn-ghost btn-sm"} onClick={() => setUnreadOnly((v) => !v)}>
             {unreadOnly ? "Showing unread" : "Show unread only"}
@@ -107,6 +145,9 @@ export function Notifications() {
               <p className="muted" style={{ fontSize: "0.85rem" }}>{fmtTime(n.created_at)}</p>
               <div className="page-actions">
                 {n.link && <Link to={n.link} className="btn btn-secondary btn-sm">Open →</Link>}
+                {n.ref_type === "rental" && n.ref_id && RENTER_KINDS.has(n.kind) && (
+                  <button type="button" className="btn btn-danger btn-sm" onClick={() => returnBook(n)}>Return book</button>
+                )}
                 {!n.is_read && <button type="button" className="btn btn-ghost btn-sm" onClick={() => markRead(n.id)}>Mark read</button>}
               </div>
             </div>

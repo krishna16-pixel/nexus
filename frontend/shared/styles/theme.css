@@ -1,5 +1,4 @@
 /* BookVerse Design System */
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap");
 
 :root {
   --font-display: "Fraunces", Georgia, serif;
@@ -971,4 +970,37 @@ a:hover {
 }
 .btn-warning:hover:not(:disabled) {
   background: #d97706;
+}
+
+/* Live notification toast (WhatsApp-style banner, bottom-right) */
+.notify-toast {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 1000;
+  max-width: 360px;
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  background: #1c1917;
+  color: #fafaf9;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  font-size: 0.9rem;
+}
+.notify-toast-body {
+  margin-top: 0.25rem;
+  color: #d6d3d1;
+  white-space: pre-line;
+  font-size: 0.82rem;
+}
+.notify-toast-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.notify-toast .btn-ghost {
+  color: #fafaf9;
 }

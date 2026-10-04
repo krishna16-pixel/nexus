@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { IconBooks, IconDashboard, IconOrders, IconPlus, IconStack, IconStar } from "./Icons";
 import { circleApi } from "@shared/circle";
+import type { NotificationItem } from "@shared/types";
 
 const LANDING_URL = import.meta.env.VITE_LANDING_URL || "http://localhost:5172";
 
@@ -11,24 +12,43 @@ export function Layout() {
   const navigate = useNavigate();
   const initials = `${user?.first_name?.[0] || ""}${user?.last_name?.[0] || ""}`.toUpperCase();
   const [unread, setUnread] = useState(0);
+  const [toast, setToast] = useState<NotificationItem | null>(null);
+  const lastCount = useRef<number | null>(null);
 
+  // Poll every 5s so new notifications appear quickly (local backend, no push server).
   useEffect(() => {
     let stop = false;
-    const fetchCount = async () => {
+    const poll = async () => {
       try {
         const r = await circleApi.unreadCount();
-        if (!stop) setUnread(r.unread);
+        if (stop) return;
+        const prev = lastCount.current;
+        lastCount.current = r.unread;
+        setUnread(r.unread);
+        if (prev !== null && r.unread !== prev) {
+          window.dispatchEvent(new Event("notifications-changed"));
+        }
+        if (prev !== null && r.unread > prev) {
+          const latest = await circleApi.notifications({ page: 1 });
+          if (!stop && latest.notifications.length > 0) setToast(latest.notifications[0]);
+        }
       } catch {
-        /* ignore — notifications unavailable */
+        /* ignore — backend unreachable; retried on the next tick */
       }
     };
-    fetchCount();
-    const t = setInterval(fetchCount, 30000);
+    poll();
+    const t = setInterval(poll, 5000);
     return () => {
       stop = true;
       clearInterval(t);
     };
   }, []);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 8000);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   const handleLogout = async () => {
     await logout();
@@ -105,6 +125,19 @@ export function Layout() {
           </button>
         </div>
       </aside>
+
+      {toast && (
+        <div className="notify-toast" role="status" aria-live="polite">
+          <div>
+            <strong>🔔 {toast.title}</strong>
+            {toast.message && <div className="notify-toast-body">{toast.message.split("\n").slice(0, 4).join("\n")}</div>}
+          </div>
+          <div className="notify-toast-actions">
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setToast(null); navigate("/notifications"); }}>Open</button>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setToast(null)}>✕</button>
+          </div>
+        </div>
+      )}
 
       <div className="main-content">
         <Outlet />
