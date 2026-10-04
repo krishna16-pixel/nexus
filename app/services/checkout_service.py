@@ -13,6 +13,7 @@ from app.models import (
     PaymentStatus,
     User,
 )
+from app.services.notification_service import OrderNotifications
 from app.utils.exceptions import BadRequestError
 
 
@@ -40,6 +41,7 @@ class CheckoutService:
         try:
             for seller_id, items in by_seller.items():
                 subtotal = Decimal("0")
+                order_items: list[OrderItem] = []
                 order = Order(
                     buyer_id=buyer.id,
                     seller_id=seller_id,
@@ -70,10 +72,13 @@ class CheckoutService:
                         author=book.author,
                     )
                     db.session.add(order_item)
+                    order_items.append(order_item)
                     book.stock -= cart_item.quantity
                     db.session.delete(cart_item)
 
                 order.subtotal = subtotal
+                seller = db.session.get(User, seller_id)
+                OrderNotifications.placed(order, buyer, seller, order_items)
                 created_orders.append(order)
 
             db.session.commit()

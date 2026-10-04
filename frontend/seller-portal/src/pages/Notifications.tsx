@@ -30,6 +30,13 @@ const KIND_ICON: Record<string, string> = {
   rental_returned_with_details: "💰",
   rental_overdue_fined: "💸",
   rental_started: "📚",
+  order_placed: "🛒",
+  order_placed_buyer: "🛒",
+  order_confirmed: "✅",
+  order_shipped: "🚚",
+  order_delivered: "📦",
+  order_cancelled: "❌",
+  order_cancelled_by_buyer: "❌",
 };
 
 export function Notifications() {
@@ -95,7 +102,7 @@ export function Notifications() {
                 <strong>{n.title}</strong>
                 {!n.is_read && <span className="badge badge-placed" style={{ marginLeft: "0.5rem" }}>new</span>}
               </p>
-              {n.message && <p className="text-secondary">{n.message}</p>}
+              {n.message && <p className="text-secondary" style={{ whiteSpace: "pre-line" }}>{n.message}</p>}
               <p className="muted" style={{ fontSize: "0.85rem" }}>{fmtTime(n.created_at)}</p>
               <div className="page-actions">
                 {n.link && <Link to={n.link} className="btn btn-secondary btn-sm">Open →</Link>}

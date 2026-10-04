@@ -220,12 +220,13 @@ class CircleService:
             raise BadRequestError("You already have a pending claim for this listing")
         claim = CircleClaim(listing_id=listing.id, requester_id=user.id, message=(message or "").strip() or None, status=ClaimStatus.pending)
         db.session.add(claim)
+        db.session.flush()  # assign claim.id so the owner's notification can reference it
         requester_name = f"{user.first_name} {user.last_name}".strip() or user.email
         if listing.offer_type == OfferType.rent:
             NotificationService.notify(
                 listing.owner_id, "rent_request",
                 f"New rent request for '{listing.title}'",
-                f"{requester_name} wants to rent your book for {_duration_str(listing.rent_days, listing.rent_hours, listing.rent_mins)}.",
+                f"{requester_name} wants to rent your book for {_duration_str(listing.rent_days, listing.rent_hours, listing.rent_mins)}.\nPhone: {user.phone or 'not provided'}\nEmail: {user.email}\nAddress: {user.address or 'not provided'}\nAccept in Circle to start the rental.",
                 link="/circle", ref_type="claim", ref_id=claim.id,
             )
         else:
@@ -289,10 +290,11 @@ class CircleService:
             renter_details = _user_details(renter) or {}
             owner_details = _user_details(owner) or {}
             rent_amount = RentalService._money(listing.rent_fee)
+            location = ", ".join(p for p in [listing.campus, listing.city] if p) or "not specified"
             NotificationService.notify(
                 claim.requester_id, "rent_accepted",
                 f"Rent accepted for '{listing.title}'",
-                f"You took '{listing.title}' from {owner_details.get('name', 'the owner')}. Return by {due_str} ({duration}). Rent to pay: ₹{rent_amount}; late penalty: 10% per full overdue day. Owner contact: {owner_details.get('phone') or 'not provided'}; handover address: {owner_details.get('address') or 'not provided'}.",
+                f"You took '{listing.title}' from {owner_details.get('name', 'the owner')}.\nWhere: {location}\nHandover address: {owner_details.get('address') or 'not provided'}\nOwner phone: {owner_details.get('phone') or 'not provided'}\nReturn by: {due_str} ({duration})\nRent to pay: ₹{rent_amount}. Late penalty: 10% per full overdue day.",
                 link="/rentals", ref_type="rental", ref_id=rental.id,
             )
             NotificationService.notify(

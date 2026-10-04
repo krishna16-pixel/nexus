@@ -8,6 +8,7 @@ from app.models import (
     PaymentStatus,
     User,
 )
+from app.services.notification_service import OrderNotifications
 from app.utils.exceptions import BadRequestError, NotFoundError
 
 
@@ -54,6 +55,7 @@ class OrderService:
             raise BadRequestError("Only placed orders can be cancelled by buyer")
         order.status = OrderStatus.cancelled
         _restore_stock(order)
+        OrderNotifications.buyer_cancelled(order)
         db.session.commit()
         return order
 
@@ -100,6 +102,11 @@ class OrderService:
         else:
             raise BadRequestError("Invalid status transition")
 
+        courier_name = None
+        if new_status == OrderStatus.shipped and order.courier_partner_id:
+            courier = db.session.get(CourierPartner, order.courier_partner_id)
+            courier_name = courier.name if courier else None
+        OrderNotifications.status_changed(order, new_status, courier_name)
         db.session.commit()
         return order
 
